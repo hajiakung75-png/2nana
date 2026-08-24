@@ -1,0 +1,46 @@
+version: 2.1
+
+jobs:
+  tmate-job:
+    docker:
+      - image: ubuntu:22.04
+
+    steps:
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update
+            apt-get install -y curl ca-certificates xz-utils
+
+      - run:
+          name: Install tmate
+          command: |
+            curl -fL "https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz" \
+              -o /tmp/tmate.tar.xz
+
+            mkdir -p /tmp/tmate
+            tar -xf /tmp/tmate.tar.xz -C /tmp/tmate
+
+            cp /tmp/tmate/tmate-2.4.0-static-linux-amd64/tmate \
+              /usr/local/bin/tmate
+
+            chmod +x /usr/local/bin/tmate
+
+      - run:
+          name: Start tmate
+          command: |
+            tmate -S /tmp/tmate.sock new-session -d
+            tmate -S /tmp/tmate.sock wait tmate-ready
+            tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
+
+      - run:
+          name: Keep job running
+          command: |
+            while true; do
+              sleep 60
+            done
+
+workflows:
+  tmate-workflow:
+    jobs:
+      - tmate-job
